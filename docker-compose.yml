@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+  web:
+    container_name: node-api
+    restart: unless-stopped
+    build: .
+    env_file: .env
+    environment:
+      - MONGO_USERNAME=$MONGO_USERNAME
+      - MONGO_PASSWORD=$MONGO_PASSWORD
+      - MONGO_HOSTNAME=db
+      - MONGO_PORT=$MONGO_PORT
+      - MONGO_DB=$MONGO_DB
+    ports:
+      - "5000:3000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    working_dir: /usr/src/app
+    networks:
+      - app-network
+
+  
+  mongo:
+    container_name: mongo-db
+    image: mongo
+    restart: unless-stopped
+    env_file: .env
+    command: mongod
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGO_USERNAME
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGO_PASSWORD
+      - MONGO_INITDB_DATABASE=$MONGO_DB
+    volumes:
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    ports:
+      - "27018:$MONGO_PORT"
+    networks:
+      - app-network
+    logging:
+      driver: none
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  dbdata:
+  node_modules:
