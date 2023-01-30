@@ -14,9 +14,8 @@ interface ErrorString {
   code: number;
 }
 const CreateUser: RequestHandler = async (req, res, next) => {
-  const data: ICreateUserInput = req.body;
-
   try {
+    const data: ICreateUserInput = req.body;
     const user = await User.create(data);
 
     return res.status(201).json({ user });
@@ -29,12 +28,53 @@ const CreateUser: RequestHandler = async (req, res, next) => {
   }
 };
 
-const getUser: RequestHandler = async (req, res, next) => {
-  const user = await User.find({});
-  res.status(201).json({ user });
+const index: RequestHandler = async (req, res, next) => {
+  try {
+    const user = await User.find({});
+    res.status(201).json({ user });
+  } catch (error) {
+    res.status(500).json({ msg: "Error" });
+  }
+};
+
+const upsert: RequestHandler = async (req, res, next) => {
+  const { email, firstName, lastName } = req.body;
+
+  const user = await User.find({ email });
+
+  try {
+    await User.findByIdAndUpdate(
+      { email },
+      {
+        $set: {
+          firstName,
+          lastName,
+        },
+      },
+      { upsert: true, new: true }
+    );
+
+    res.status(201).json({ user });
+  } catch (error) {
+    res.status(500).json({ msg: "Error" });
+  }
+};
+
+const show: RequestHandler = async (req, res, next) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findById(email);
+
+    return res.status(201).json({ user });
+  } catch (error) {
+    return res.status(500).json({ msg: "Error" });
+  }
 };
 
 export default {
   CreateUser,
-  getUser,
+  index,
+  upsert,
+  show,
 };
