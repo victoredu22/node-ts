@@ -1,18 +1,8 @@
 import User, { IUser } from "../Models/User.model";
 import { RequestHandler, response } from "express";
+import { ICreateUserInput } from "../Types/user";
+import { ErrorString } from "../Types/errors";
 
-interface ICreateUserInput {
-  email: IUser["email"];
-  firstName: IUser["firstName"];
-  lastName: IUser["lastName"];
-}
-
-interface ErrorString {
-  name: string;
-  message: string;
-  stack?: string;
-  code: number;
-}
 const CreateUser: RequestHandler = async (req, res, next) => {
   try {
     const data: ICreateUserInput = req.body;
@@ -38,12 +28,10 @@ const index: RequestHandler = async (req, res, next) => {
 };
 
 const upsert: RequestHandler = async (req, res, next) => {
-  const { email, firstName, lastName } = req.body;
-
-  const user = await User.find({ email });
-
   try {
-    await User.findByIdAndUpdate(
+    const { email, firstName, lastName } = req.body;
+
+    const user = await User.findOneAndUpdate(
       { email },
       {
         $set: {
@@ -53,7 +41,7 @@ const upsert: RequestHandler = async (req, res, next) => {
       },
       { upsert: true, new: true }
     );
-
+    console.log(user);
     res.status(201).json({ user });
   } catch (error) {
     res.status(500).json({ msg: "Error" });
@@ -61,9 +49,8 @@ const upsert: RequestHandler = async (req, res, next) => {
 };
 
 const show: RequestHandler = async (req, res, next) => {
-  const { email } = req.body;
-
   try {
+    const { email } = req.body;
     const user = await User.findById(email);
 
     return res.status(201).json({ user });
